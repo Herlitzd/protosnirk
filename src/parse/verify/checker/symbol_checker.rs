@@ -69,16 +69,13 @@ mod tests {
     use lex::{Token, TokenData, TextLocation};
     use parse::tests::make_parser;
     use parse::verify::{ExpressionChecker, ErrorCollector, VerifyError};
+    use parse::verify::checker::tests::verify_checker_errors;
     use super::SymbolTableChecker;
 
     #[test]
     fn it_finds_extra_declaration() {
-        let mut parser = make_parser("let x = 0 let x = 1");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let x = 0 let x = 1";
+        let checker = SymbolTableChecker::new();
         let expected = vec![
             VerifyError::new(Token {
                     location: TextLocation { index: 14, line: 0, column: 14 },
@@ -94,16 +91,13 @@ mod tests {
                 ],
                 "Variable x is already declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
     fn it_finds_missing_declaration() {
-        let mut parser = make_parser("let mut y = 0 y = x + 1");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let mut y = 0 y = x + 1";
+        let checker = SymbolTableChecker::new();
         let expected = vec![
             VerifyError::new(Token {
                 location: TextLocation { index: 18, line: 0, column: 18 },
@@ -113,16 +107,13 @@ mod tests {
             vec![],
             "Variable x was not declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
     fn it_finds_extra_declaration_of_different_type() {
-        let mut parser = make_parser("let x = 0 let mut x = 1");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let x = 0 let mut x = 1";
+        let checker = SymbolTableChecker::new();
         let expected = vec![
             VerifyError::new(Token {
                 location: TextLocation { index: 18, line: 0, column: 18 },
@@ -138,16 +129,13 @@ mod tests {
             ],
             "Variable x is already declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
     fn it_finds_missing_declaration_in_return_stmt() {
-        let mut parser = make_parser("let x = 0 return y");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let x = 0 return y";
+        let checker = SymbolTableChecker::new();
         let expected: Vec<VerifyError> = vec![
             VerifyError::new(Token {
                 location: TextLocation {
@@ -160,16 +148,13 @@ mod tests {
             }, vec![],
             "Variable y was not declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
     fn it_finds_missing_declaration_in_binary_op() {
-        let mut parser = make_parser("let x = 0 x + y");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let x = 0 x + y";
+        let checker = SymbolTableChecker::new();
         let expected = vec![
             VerifyError::new(Token {
                 location: TextLocation { index: 14, line: 0, column: 14 },
@@ -179,17 +164,14 @@ mod tests {
             vec![],
             "Variable y was not declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
 
     }
 
     #[test]
     fn it_finds_missing_declaration_in_unary_op() {
-        let mut parser = make_parser("let x = 0 return -y");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let x = 0 return -y";
+        let checker = SymbolTableChecker::new();
         let expected: Vec<VerifyError> = vec![
             VerifyError::new(Token {
                 location: TextLocation {
@@ -202,17 +184,14 @@ mod tests {
             }, vec![],
             "Variable y was not declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
 
     }
 
     #[test]
     fn it_finds_missing_declaration_in_var_ref_expr() {
-        let mut parser = make_parser("let x = 0 y");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let x = 0 y";
+        let checker = SymbolTableChecker::new();
         let expected: Vec<VerifyError> = vec![
             VerifyError::new(Token {
                 location: TextLocation {
@@ -225,16 +204,13 @@ mod tests {
             }, vec![],
             "Variable y was not declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
     fn it_finds_missing_declaration_in_assignment_lvalue() {
-        let mut parser = make_parser("let x = 0 y = x");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let x = 0 y = x";
+        let checker = SymbolTableChecker::new();
         let expected: Vec<VerifyError> = vec![
             VerifyError::new(Token {
                 location: TextLocation {
@@ -247,16 +223,13 @@ mod tests {
             }, vec![],
             "Variable y was not declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
     fn it_finds_missing_declaration_in_assignment_rvalue() {
-        let mut parser = make_parser("let mut x = 0 x = y");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let mut x = 0 x = y";
+        let checker = SymbolTableChecker::new();
         let expected = vec![
             VerifyError::new(Token {
                 location: TextLocation { index: 18, line: 0, column: 18 },
@@ -266,16 +239,13 @@ mod tests {
             vec![],
             "Variable y was not declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
     fn it_finds_circular_declaration() {
-        let mut parser = make_parser("let x = x");
-        let block = parser.block().unwrap();
-        let mut sym_checker = SymbolTableChecker::new();
-        let mut verifier = ErrorCollector::new();
-        sym_checker.check_block(&mut verifier, &block);
+        let input = "let x = x";
+        let checker = SymbolTableChecker::new();
         let expected: Vec<VerifyError> = vec![
             VerifyError::new(Token {
                 location: TextLocation {
@@ -288,7 +258,7 @@ mod tests {
             }, vec![],
             "Variable x was not declared".into())
         ];
-        assert_eq!(verifier.get_errors(), &*expected);
+        verify_checker_errors(input, checker, expected);
     }
 
 }
