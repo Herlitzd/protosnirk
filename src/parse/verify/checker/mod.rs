@@ -18,7 +18,9 @@ mod tests {
     use parse::verify::{ExpressionChecker, ErrorCollector, VerifyError};
     use parse::tests::make_parser;
 
-    pub fn verify_errors<E: ExpressionChecker>(input: &'static str, mut checker: E, expected: Vec<VerifyError>) {
+    pub fn verify_checker_errors<E: ExpressionChecker>(input: &'static str,
+                                                       mut checker: E,
+                                                       expected: Vec<VerifyError>) {
         let mut parser = make_parser(input);
         let block = parser.block().unwrap();
         let mut verifier = ErrorCollector::new();

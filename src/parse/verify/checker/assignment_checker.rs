@@ -30,7 +30,7 @@ mod tests {
     use parse::tests::make_parser;
     use parse::verify::{ExpressionChecker, ErrorCollector, VerifyError};
     use super::AssignmentChecker;
-    use parse::verify::checker::tests::verify_errors;
+    use parse::verify::checker::tests::verify_checker_errors;
 
     #[test]
     fn it_finds_redundant_assign() {
@@ -44,7 +44,7 @@ mod tests {
             },
             vec![], "Redundant assignment of x to itself".to_string())
         ];
-        verify_errors(input, checker, expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
@@ -52,7 +52,7 @@ mod tests {
         let input = "x = y";
         let checker = AssignmentChecker { };
         let expected = vec![];
-        verify_errors(input, checker, expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
@@ -60,7 +60,7 @@ mod tests {
         let input = "x = x + 1";
         let checker = AssignmentChecker { };
         let expected = vec![];
-        verify_errors(input, checker, expected);
+        verify_checker_errors(input, checker, expected);
     }
 
     #[test]
@@ -68,7 +68,7 @@ mod tests {
         let input = "x += x"; // x = x + x
         let checker = AssignmentChecker { };
         let expected = vec![];
-        verify_errors(input, checker, expected);
+        verify_checker_errors(input, checker, expected);
     }
 
 }
