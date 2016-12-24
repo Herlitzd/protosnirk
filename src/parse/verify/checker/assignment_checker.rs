@@ -5,16 +5,18 @@ use parse::expression::{Identifier, Assignment, Expression};
 use parse::verify::{ExpressionChecker, VerifyError, ErrorCollector};
 
 /// Reports warnings for redundant assignments (`x = x`)
-pub struct AssignmentChecker { }
+pub struct AssignmentChecker {
+    errors: ErrorCollector
+}
 impl ExpressionChecker for AssignmentChecker {
-    fn check_assignment(&mut self, errors: &mut ErrorCollector, assign: &Assignment) {
+    fn check_assignment(&mut self, assign: &Assignment) {
         let var_name = assign.lvalue.get_name();
 
         match *assign.rvalue {
             Expression::VariableRef(ref r_var) => {
                 if var_name == r_var.get_name() {
                     let err_text = format!("Redundant assignment of {} to itself", var_name);
-                    errors.add_error(VerifyError::new(assign.lvalue.token.clone(), vec![], err_text));
+                    self.errors.add_error(VerifyError::new(assign.lvalue.token.clone(), vec![], err_text));
                 }
             },
             _ => {}

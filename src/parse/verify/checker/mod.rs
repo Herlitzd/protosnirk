@@ -12,6 +12,7 @@ mod assignment_checker;
 pub use self::symbol_checker::SymbolTableChecker;
 pub use self::usage_checker::UsageChecker;
 pub use self::assignment_checker::AssignmentChecker;
+pub use self::constant_checker::ConstantAssembler;
 
 #[cfg(test)]
 mod tests {
@@ -28,3 +29,4 @@ mod tests {
         assert_eq!(verifier.get_errors(), &*expected);
     }
 }
+mod constant_checker;

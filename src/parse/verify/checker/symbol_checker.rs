@@ -9,59 +9,58 @@ use parse::build::{SymbolTable, Symbol};
 /// and reports variable declaration and mutability errors.
 #[derive(Debug, Default)]
 pub struct SymbolTableChecker {
-    symbol_table: SymbolTable
+    symbol_table: SymbolTable,
+    errors: ErrorCollector
 }
 impl SymbolTableChecker {
-    pub fn new() -> SymbolTableChecker {
+    pub fn new(errors: ErrorCollector, symbol_table: SymbolTable) -> SymbolTableChecker {
         SymbolTableChecker {
-            symbol_table: SymbolTable::new(),
+            symbol_table: symbol_table,
+            errors: errors
         }
+    }
+    pub fn decompose(self) -> (SymbolTable, ErrorCollector) {
+        (self.symbol_table, self.errors)
     }
 }
 impl ExpressionChecker for SymbolTableChecker {
-    fn check_declaration(&mut self, errors: &mut ErrorCollector, decl: &Declaration) {
+    fn check_declaration(&mut self, decl: &Declaration) {
         // Check rvalue first to prevent use-before-declare
-        self.check_expression(errors, &decl.value);
+        self.check_expression(&decl.value);
 
         if let Some(declared_at) = self.symbol_table.get(decl.get_name()).map(|sym| sym.get_token().clone()) {
             // Add previous declaration
             let references: Vec<Token> = vec![declared_at];
             let err_text = format!("Variable {} is already declared", decl.get_name());
-            errors.add_error(VerifyError::new(decl.token.clone(), references, err_text));
+            self.errors.add_error(VerifyError::new(decl.token.clone(), references, err_text));
         } else {
             self.symbol_table.insert(decl.get_name().to_string(), Symbol::from_declaration(decl));
         }
     }
-    fn check_var_ref(&mut self, errors: &mut ErrorCollector, var_ref: &Identifier) {
+    fn check_var_ref(&mut self, var_ref: &Identifier) {
         if !self.symbol_table.contains_key(var_ref.get_name()) {
             let err_text = format!("Variable {} was not declared", var_ref.get_name());
-            errors.add_error(VerifyError::new(var_ref.token.clone(), vec![], err_text));
+            self.errors.add_error(VerifyError::new(var_ref.token.clone(), vec![], err_text));
         } else {
             self.symbol_table.get_mut(var_ref.get_name()).map(Symbol::set_used);
         }
     }
-    fn check_assignment(&mut self, errors: &mut ErrorCollector, assign: &Assignment) {
+    fn check_assignment(&mut self, assign: &Assignment) {
         if !self.symbol_table.contains_key(assign.lvalue.get_name()) {
             let err_text = format!("Variable {} was not declared", assign.lvalue.get_name());
-            errors.add_error(VerifyError::new(assign.lvalue.token.clone(), vec![], err_text));
+            self.errors.add_error(VerifyError::new(assign.lvalue.token.clone(), vec![], err_text));
         }
         else if !self.symbol_table[assign.lvalue.get_name()].is_mutable() {
             let err_text = format!("Variable {} was not declared mutable", assign.lvalue.get_name());
             let references = vec![self.symbol_table[assign.lvalue.get_name()].get_token().clone()];
-            errors.add_error(VerifyError::new(assign.lvalue.token.clone(), references, err_text));
+            self.errors.add_error(VerifyError::new(assign.lvalue.token.clone(), references, err_text));
         }
         else {
             self.symbol_table.get_mut(assign.lvalue.get_name()).map(Symbol::set_mutated);
         }
-        self.check_expression(errors, &assign.rvalue);
+        self.check_expression(&assign.rvalue);
     }
 }
-impl Into<SymbolTable> for SymbolTableChecker {
-    fn into(self) -> SymbolTable {
-        self.symbol_table
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;
@@ -70,6 +69,7 @@ mod tests {
     use parse::tests::make_parser;
     use parse::verify::{ExpressionChecker, ErrorCollector, VerifyError};
     use parse::verify::checker::tests::verify_checker_errors;
+    use parse::build::SymbolTable;
     use super::SymbolTableChecker;
 
     #[test]
@@ -259,6 +259,39 @@ mod tests {
             "Variable x was not declared".into())
         ];
         verify_checker_errors(input, checker, expected);
+    }
+
+    #[test]
+    fn it_finds_missing_declaration_in_assignop_expression() {
+        let mut parser = make_parser("let x = 0 \n\
+        let mut y = -x - 1 \n\
+        let z = 2 \n\
+        y += z \n\
+        t += z * (2 % 2) \n\
+        return y - 2");
+        let block = parser.block().unwrap();
+        let errors = ErrorCollector::new();
+        let symbol_table = SymbolTable::new();
+        let mut sym_checker = SymbolTableChecker::new(errors, symbol_table);
+        sym_checker.check_block(&block);
+        let (_table, verifier) = sym_checker.decompose();
+        let expected: Vec<VerifyError> = vec![
+            VerifyError::new(
+                Token {
+                    location: TextLocation { index: 50, line: 4, column: 0 },
+                    text: Cow::Borrowed("t"),
+                    data: TokenData::Ident
+                }, vec![],
+                "Variable t was not declared".into()),
+            VerifyError::new(
+                Token {
+                    location: TextLocation { index: 50, line: 4, column: 0 },
+                    text: Cow::Borrowed("t"),
+                    data: TokenData::Ident
+                }, vec![],
+                "Variable t was not declared".into())
+            ];
+        assert_eq!(verifier.get_errors(), &*expected);
     }
 
 }
