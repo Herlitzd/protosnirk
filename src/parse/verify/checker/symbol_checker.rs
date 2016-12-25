@@ -61,6 +61,13 @@ impl ExpressionChecker for SymbolTableChecker {
         self.check_expression(&assign.rvalue);
     }
 }
+
+impl Into<ErrorCollector> for SymbolTableChecker {
+    fn into(self) -> ErrorCollector {
+        self.errors
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::borrow::Cow;

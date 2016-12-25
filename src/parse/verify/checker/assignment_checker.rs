@@ -8,6 +8,12 @@ use parse::verify::{ExpressionChecker, VerifyError, ErrorCollector};
 pub struct AssignmentChecker {
     errors: ErrorCollector
 }
+impl AssignmentChecker {
+    pub fn new(errors: ErrorCollector) -> AssignmentChecker {
+        AssignmentChecker { errors: errors }
+    }
+}
+
 impl ExpressionChecker for AssignmentChecker {
     fn check_assignment(&mut self, assign: &Assignment) {
         let var_name = assign.lvalue.get_name();
