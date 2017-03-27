@@ -17,20 +17,35 @@ rust:
 #cache:
 # - cargo
 
+addons:
+  apt:
+    sources:
+      - kalakris-cmake
+      #- llvm-toolchain-precise-3.9
+    packages:
+      - cmake
+      #- libllvm3.9-dbg
+      #- llvm-3.9
+      - llvm-dev
+      #- llvm-tool
+      #- libllvm3.9
+      #- llvm-3.9
+      #- llvm-3.9-runtime
+      #- llvm-3.9-tool
+      #- libstdc++-4.9
+
 notifications:
   email: false
 
 install:
   # Install cargo-check to speed up compile time of the general code
-#  - cargo install --force cargo-check
   - mkdir -v $HOME/bin
   - sh build/install-llvm.sh
-  - sh build/install-cmake.sh
+  # - sh build/install-cmake.sh
   - export PATH=$PATH:$HOME/.cargo/bin
   - echo $PATH
   - ls $HOME/bin
   - echo "Done with install"
-  - export LLVM_SYS_3.7.1_PREFIX=$HOME/bin
 
 script:
   - echo "Beginning script"
