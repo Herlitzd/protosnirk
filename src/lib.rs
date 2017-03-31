@@ -12,6 +12,7 @@ extern crate llvm_sys;
 
 pub mod lex;
 pub mod parse;
+pub mod check;
 pub mod compile;
 pub mod run;
 
