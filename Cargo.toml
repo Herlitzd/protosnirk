@@ -14,6 +14,7 @@ unicode_categories = "0.1"
 llvm-sys = "0.4"
 log = "*"
 env_logger = "*"
+smallvec = "0.3"
 
 [dev-dependencies]
 lazy_static = "0.2"
