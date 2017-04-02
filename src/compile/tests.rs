@@ -1,5 +1,4 @@
 use parse::tests::parser;
-use parse::{ErrorCollector, SymbolTable, ASTVisitor};
 use compile::{ModuleProvider, ModuleCompiler, SimpleModuleProvider};
 
 pub fn create_module_compiler(input: &'static str, name: &str, optimize: bool)
