@@ -94,8 +94,8 @@ pub mod identify;
 pub mod check;
 pub mod typeinfer;
 pub mod lint;
-pub mod compile;
-pub mod run;
+//pub mod compile;
+//pub mod run;
 
 #[cfg(test)]
 mod tests;

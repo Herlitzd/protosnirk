@@ -1,7 +1,8 @@
 use std::collections::{HashMap, BTreeMap};
 
-use parse::{ASTVisitor, ScopeIndex, SymbolTable};
+use parse::{ScopedId};
 use parse::ast::*;
+use visit::visitor::UnitVisitor;
 use compile::{LLVMContext, ModuleProvider};
 
 use llvm_sys::{self, LLVMOpcode, LLVMRealPredicate};
@@ -22,7 +23,7 @@ pub struct ModuleCompiler<M: ModuleProvider> {
     context: LLVMContext,
     ir_code: Vec<LLVMValueRef>,
     symbols: SymbolTable,
-    scope_manager: HashMap<ScopeIndex, LLVMValueRef>
+    scope_manager: HashMap<ScopedId, LLVMValueRef>
 }
 impl<M: ModuleProvider> ModuleCompiler<M> {
     pub fn new(symbols: SymbolTable, provider: M, optimizations: bool) -> ModuleCompiler<M> {
@@ -230,7 +231,7 @@ impl<M:ModuleProvider> ASTVisitor for ModuleCompiler<M> {
         }
     }
 
-    fn check_fn_declaration(&mut self, fn_declaration: &FnDeclaration) {
+    fn check_fn_declaration(&mut self, fn_declaration: &BlockFnDeclaration) {
         trace!("Checking declaration of {}", fn_declaration.get_name().get_name());
 
         let float_type = RealTypeRef::get_float();
