@@ -1,5 +1,18 @@
-sudo: required
+# Protosnirk CI setup:
+#   - add LLVM package credentials
+#   - install LLVM from their apt package
+#   - `cargo check`
+#   - `cargo test`
+
+# I would like to thank Zig for having a working
+# Travis setup with LLVM. I'm following their .travis.yml
+# and other CI scripts.
+
+# Zig is an MIT-licensed open-source programming language,
+# available at https://github.com/zig-lang/zig
+
 dist: trusty
+sudo: required
 
 git:
   depth: 3
@@ -7,41 +20,31 @@ git:
 language: rust
 rust:
   - stable
-#  - beta
+  - beta
 
-#matrix:
-#  allow_failures:
-#    - rust:
-#        - beta
-#  fast_finish: true
+matrix:
+  allow_failures:
+    - rust:
+        - beta
+  fast_finish: true
 
 cache:
   - cargo
-  - directories:
-    - $HOME/llvm-4.0.0
 
 notifications:
   email: false
 
-addons:
-  apt:
-    packages:
-      - libffi-dev
-      - libncursesw5
-      - libncursesw5-dev
+before_install:
+  - sudo sh -c 'echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-5.0 main" >> /etc/apt/sources.list'
+  - wget -O - http://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+  - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update -q
 
 install:
-  - sh build/install-llvm.sh
-  - sh build/install-cmake.sh
-  # Clone the fork of llvm-sys with bugfixes
-  - hg clone https://snirkimmington@bitbucket.org/snirkimmington/llvm-sys.rs $HOME/llvm-sys.rs
-  # Super duper hacky to get ncurses6
-  - sudo ln -s /usr/lib/libncursesw.so.5  /usr/lib/libncursesw.so.6
-  - sudo ldconfig -n /usr/lib/libncursesw.so.6
+  - sudo apt-get remove -y llvm-*
+  - sudo rm -rf /usr/local/*
+  - sudo apt-get install -y clang-5.0 libclang-5.0 libclang-5.0-dev llvm-5.0 llvm-5.0-dev liblld-5.0 liblld-5.0-dev
 
 script:
-  - export PATH=$HOME/llvm-4.0.0/bin:$PATH
-  - echo $PATH
-  - ldd $(which llvm-config)
-  - llvm-config --version
-  - PATH=$HOME/llvm-4.0.0/bin:$PATH cargo test --verbose compile_example
+  - cargo check --verbose
+  - cargo test --verbose
